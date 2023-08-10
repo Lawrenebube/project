@@ -120,6 +120,10 @@ const application = (index) => {
 application(stateIndex)
 
 
+//
+
+// ... (Rest of the code remains the same)
+
 // Function to send audio data to the server
 const sendAudioToServer = (blob) => {
     const formData = new FormData();

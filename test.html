@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Record and Send Audio</title>
+</head>
+<body>
+    <h1>Press and Hold to Record</h1>
+    <div id="button" class="button"></div>
+    <div id="status">Release to send</div>
+    <div id="result"></div>
+    <script>
+        const button = document.getElementById('button');
+        const status = document.getElementById('status');
+        const resultDiv = document.getElementById('result');
+        let mediaRecorder;
+        let audioChunks = [];
+
+        button.addEventListener('mousedown', () => {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then((stream) => {
+                    mediaRecorder = new MediaRecorder(stream);
+
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                        }
+                    };
+
+                    mediaRecorder.start();
+                    status.textContent = 'Recording...';
+                })
+                .catch((error) => {
+                    console.error('Error accessing microphone:', error);
+                });
+        });
+
+        button.addEventListener('mouseup', () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                status.textContent = 'Sending...';
+            }
+        });
+
+        mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            sendAudioToServer(audioBlob);
+            audioChunks = [];
+        };
+
+        function sendAudioToServer(audioBlob) {
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'recorded.wav');
+
+            fetch('/process_audio', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.text) {
+                    resultDiv.textContent = `Converted Text: ${data.text}`;
+                } else if (data.error) {
+                    resultDiv.textContent = `Error: ${data.error}`;
+                }
+            })
+            .catch(error => {
+                console.error('Error sending audio to server:', error);
+            })
+            .finally(() => {
+                status.textContent = 'Release to send';
+            });
+        }
+    </script>
+</body>
+</html>

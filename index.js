@@ -37,7 +37,7 @@ window.addEventListener('hashchange', loadContent);
   const menuClose = document.getElementById ('close')
   const popupMenu = document.getElementById ('popup')
   menuClose.addEventListener('click',() => {
-    popupMenu.style.display = 'none'
+    // popupMenu.style.display = 'none'
 
   })
   const userText = document.getElementById('usertext');
